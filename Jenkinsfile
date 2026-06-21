@@ -8,6 +8,15 @@ pipeline {
 
     stages {
 
+        stage('Check Branch') {
+            steps {
+                sh '''
+                echo "BRANCH_NAME=$BRANCH_NAME"
+                git branch
+                '''
+            }
+        }
+
         stage('Build') {
             steps {
                 sh '''
@@ -21,6 +30,7 @@ pipeline {
             when {
                 branch 'dev'
             }
+
             steps {
                 withCredentials([
                     usernamePassword(
@@ -31,8 +41,11 @@ pipeline {
                 ]) {
                     sh '''
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
                     docker tag react-app:latest $DEV_IMAGE:latest
+
                     docker push $DEV_IMAGE:latest
+
                     docker logout
                     '''
                 }
@@ -41,8 +54,9 @@ pipeline {
 
         stage('Push Prod') {
             when {
-                branch 'master'
+                branch 'main'
             }
+
             steps {
                 withCredentials([
                     usernamePassword(
@@ -53,8 +67,11 @@ pipeline {
                 ]) {
                     sh '''
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
                     docker tag react-app:latest $PROD_IMAGE:latest
+
                     docker push $PROD_IMAGE:latest
+
                     docker logout
                     '''
                 }
@@ -72,6 +89,7 @@ pipeline {
         success {
             echo 'Pipeline executed successfully!'
         }
+
         failure {
             echo 'Pipeline failed. Check console logs.'
         }
