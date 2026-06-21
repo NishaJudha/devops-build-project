@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DEV_IMAGE  = "nishajudha/dev-project"
-        PROD_IMAGE = "nishajudha/prod-project"
+        DEV_IMAGE = "nishajudha/dev-project"
     }
 
     stages {
@@ -27,10 +26,6 @@ pipeline {
         }
 
         stage('Push Dev') {
-            when {
-                branch 'dev'
-            }
-
             steps {
                 withCredentials([
                     usernamePassword(
@@ -40,37 +35,11 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-                    docker tag react-app:latest $DEV_IMAGE:latest
+                    docker tag react-app:latest ${DEV_IMAGE}:latest
 
-                    docker push $DEV_IMAGE:latest
-
-                    docker logout
-                    '''
-                }
-            }
-        }
-
-        stage('Push Prod') {
-            when {
-                branch 'main'
-            }
-
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-
-                    docker tag react-app:latest $PROD_IMAGE:latest
-
-                    docker push $PROD_IMAGE:latest
+                    docker push ${DEV_IMAGE}:latest
 
                     docker logout
                     '''
